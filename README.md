@@ -1,2 +1,2 @@
 # pkgmgr
-## simple package manager on C
+## simple package manager on C++
