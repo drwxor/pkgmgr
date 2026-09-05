@@ -1,0 +1,4 @@
+#!/bin/sh
+
+mkdir -p /usr/local/bin/
+cp pkgmgr /usr/local/bin/pkgmgr
