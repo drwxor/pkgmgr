@@ -1,6 +1,6 @@
-#include "csv.hpp"
-
 #include <sstream>
+
+#include "csv.hpp"
 
 std::vector<std::string> split(
 	const std::string& line,
