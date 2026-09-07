@@ -1,6 +1,9 @@
 #include <string>
 
+#include <curl/curl.h>
+
 #include "repo.hpp"
+#include "download.hpp"
 
 enum Command {
     COMMAND_INSTALL,
@@ -48,16 +51,26 @@ int main(int argc, char** argv) {
     			return 1;
     		}
 
+            curl_global_init(CURL_GLOBAL_DEFAULT);
+
     		auto pkg = find_package(packages, argv[2]);
 
     		if (!pkg)
     		{
+                curl_global_cleanup();
     			printf("package not found\n");
     			return 1;
     		}
 
-            printf("installing %s\n", pkg->name.c_str());
+            if (!download_file(pkg->url, pkg->name + ".pkg"))
+            {
+                printf("download failed\n");
+                return 1;
+            }
 
+            printf("downloaded %s\n", pkg->name.c_str());
+
+            curl_global_cleanup();
             break;
         }
 
