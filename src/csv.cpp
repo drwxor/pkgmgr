@@ -2,11 +2,7 @@
 
 #include "csv.hpp"
 
-std::vector<std::string> split(
-	const std::string& line,
-	char delimiter
-)
-{
+std::vector<std::string> split(const std::string& line,	char delimiter) {
 	std::vector<std::string> result;
 	std::stringstream ss(line);
 

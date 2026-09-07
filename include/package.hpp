@@ -3,14 +3,12 @@
 #include <string>
 #include <vector>
 
-struct Package
-{
+struct Package {
 	std::string name;
 	std::string meta;
 };
 
-struct PackageMeta
-{
+struct PackageMeta {
 	std::string description;
 	std::string version;
 	std::vector<std::string> depends;
