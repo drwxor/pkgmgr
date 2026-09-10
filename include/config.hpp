@@ -2,5 +2,9 @@
 
 #include <string>
 
-static const std::string REPOS_PATH = "./test/repos.csv";
-static const std::string REPOS_DIRECTORY = "./test/repos/";
+static const std::string REPOS_PATH = "/tmp/pkgmgr/repos.csv";
+static const std::string REPOS_DIRECTORY = "/tmp/pkgmgr/repos/";
+
+static const std::string PACKAGE_EXTRACT_DIRECTORY = "/tmp/pkgmgr";
+
+static const std::string INSTALLED_PATH = "/tmp/pkgmgr/installed.csv";

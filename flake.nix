@@ -19,6 +19,8 @@
         llvm
         lld
         curl
+        libarchive
+        libarchive.dev
         pkg-config
         oksh
       ];

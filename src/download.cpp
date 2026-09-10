@@ -1,11 +1,11 @@
+#include "download.hpp"
+
 #include <cstdio>
 #include <fstream>
 #include <string>
 #include <sstream>
 
 #include <curl/curl.h>
-
-#include "download.hpp"
 
 static size_t write_file(void* ptr, size_t size, size_t nmemb, void* stream) {
 	FILE* file = static_cast<FILE*>(stream);

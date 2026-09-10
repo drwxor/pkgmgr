@@ -1,6 +1,6 @@
-#include <sstream>
-
 #include "csv.hpp"
+
+#include <sstream>
 
 std::vector<std::string> split(const std::string& line,	char delimiter) {
 	std::vector<std::string> result;

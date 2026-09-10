@@ -1,10 +1,12 @@
+#include "repo.hpp"
+
 #include <cstdio>
 #include <fstream>
 #include <string>
 #include <sstream>
 
-#include "repo.hpp"
 #include "csv.hpp"
+#include "models.hpp"
 #include "download.hpp"
 #include "config.hpp"
 
@@ -60,32 +62,6 @@ bool sync_repo(const RepositoryConfig& repo) {
 	}
 
 	return true;
-}
-
-bool download_package(const Repository& repo, const Package& pkg, const std::string& output) {
-	std::string url = repo.url;
-
-	if (!url.empty() && url.back() != '/')
-		url += '/';
-
-	url += pkg.metadata.content;
-
-	printf("downloading %s\n", url.c_str());
-
-	if (!download_file(url, output)) {
-		std::remove(output.c_str());
-		return false;
-	}
-
-	return true;
-}
-Package* find_package(Repository& repo, const std::string& name) {
-	auto it = repo.packages.find(name);
-
-	if (it == repo.packages.end())
-		return nullptr;
-
-	return &it->second;
 }
 
 std::vector<RepositoryConfig> load_repos(const std::string& path) {

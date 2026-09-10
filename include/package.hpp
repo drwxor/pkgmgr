@@ -1,18 +1,9 @@
 #pragma once
 
 #include <string>
-#include <vector>
 
-struct PackageMeta {
-	std::string description;
-	std::string version;
-	std::string content;
-	std::vector<std::string> depends;
-};
+#include "models.hpp"
 
-struct Package {
-	std::string name;
-	std::string meta;
-
-	PackageMeta metadata;
-};
+bool download_package(const Repository& repo, const Package& pkg, const std::string& output);
+bool remove_package(const std::string& name);
+Package* find_package(Repository& repo, const std::string& name);
