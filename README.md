@@ -1,6 +1,6 @@
 # pkgmgr
 
-pkgmgr is a simple package manager for Unix systems.
+pkgmgr is a simple package manager for POSIX systems.
 
 Packages are distributed through static repositories over HTTP(S). A repository consists only of files and does not require any server-side package management software.
 
