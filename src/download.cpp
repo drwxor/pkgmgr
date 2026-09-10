@@ -1,4 +1,8 @@
 #include <cstdio>
+#include <fstream>
+#include <string>
+#include <sstream>
+
 #include <curl/curl.h>
 
 #include "download.hpp"
@@ -12,10 +16,7 @@ static size_t write_file(void* ptr, size_t size, size_t nmemb, void* stream) {
 static size_t write_string(void* ptr, size_t size, size_t nmemb, void* stream) {
 	std::string* output = static_cast<std::string*>(stream);
 
-	output->append(
-		static_cast<char*>(ptr),
-		size * nmemb
-	);
+	output->append(static_cast<char*>(ptr), size * nmemb);
 
 	return size * nmemb;
 }
@@ -51,12 +52,13 @@ bool download_file(const std::string& url, const std::string& output) {
 
 	if (result != CURLE_OK) {
 		printf("curl: %s\n", curl_easy_strerror(result));
-
+		std::remove(output.c_str());
 		return false;
 	}
 
 	if (response_code < 200 || response_code >= 300) {
 		printf("HTTP: %ld\n", response_code);
+		std::remove(output.c_str());
 		return false;
 	}
 
@@ -79,18 +81,13 @@ bool download_string(const std::string& url, std::string& output) {
 	long response_code = 0;
 
 	if (result == CURLE_OK) {
-		curl_easy_getinfo(
-			curl,
-			CURLINFO_RESPONSE_CODE,
-			&response_code
-		);
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
 	}
 
 	curl_easy_cleanup(curl);
 
 	if (result != CURLE_OK) {
 		printf("curl: %s\n", curl_easy_strerror(result));
-
 		return false;
 	}
 

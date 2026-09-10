@@ -45,8 +45,7 @@ int main(int argc, char** argv) {
 
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
-	switch (cmd)
-	{
+	switch (cmd) {
 		case COMMAND_UNKNOWN: {
 			print_help();
 			curl_global_cleanup();
@@ -54,7 +53,7 @@ int main(int argc, char** argv) {
 		}
 
 		case COMMAND_SYNC: {
-			auto repos = load_repositories(REPOS_PATH);
+			auto repos = load_repos(REPOS_PATH);
 
 			if (repos.empty()) {
 				printf("no repositories configured\n");
@@ -86,22 +85,25 @@ int main(int argc, char** argv) {
 				return 1;
 			}
 
-			auto repos = load_repositories(REPOS_PATH);
+			auto repos = load_repos(REPOS_PATH);
 
 			for (auto& config : repos) {
 				auto repo = load_repo(config);
 
-				auto pkg = find_package(
-					repo,
-					argv[2]
-				);
+				auto pkg = find_package(repo, argv[2]);
 
 				if (!pkg)
 					continue;
 
-				printf("found %s in %s\n", pkg->name.c_str(), repo.name.c_str());
+				std::string output = pkg->name + ".tar.zst";
 
-				printf("meta: %s\n", pkg->meta.c_str());
+				if (!download_package(repo, *pkg, output))
+				{
+					printf("download failed\n");
+					return 1;
+				}
+
+				printf("downloaded %s\n", output.c_str());
 
 				curl_global_cleanup();
 				return 0;
@@ -120,25 +122,23 @@ int main(int argc, char** argv) {
 				return 1;
 			}
 
-			auto repos = load_repositories(REPOS_PATH);
+			auto repos = load_repos(REPOS_PATH);
 
 			for (auto& config : repos) {
 				auto repo = load_repo(config);
 
-				auto pkg = find_package(repo,argv[2]);
+				auto pkg = find_package(repo, argv[2]);
 
 				if (!pkg)
 					continue;
 
-				auto meta = load_package_meta(repo, *pkg);
-
 				printf("name: %s\n", pkg->name.c_str());
-				printf("version: %s\n", meta.version.c_str());
-				printf("description: %s\n", meta.description.c_str());
+				printf("version: %s\n", pkg->metadata.version.c_str());
+				printf("description: %s\n", pkg->metadata.description.c_str());
 
 				printf("depends:");
 
-				for (auto& dep : meta.depends)
+				for (auto& dep : pkg->metadata.depends)
 					printf(" %s", dep.c_str());
 
 				printf("\n");

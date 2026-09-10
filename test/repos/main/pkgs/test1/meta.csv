@@ -1,0 +1,4 @@
+description,Test package
+version,1.0.0
+content,pkgs/test1/content.tar.zst
+depends,

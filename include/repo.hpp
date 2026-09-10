@@ -17,12 +17,12 @@ struct RepositoryConfig {
 	std::string url;
 };
 
-std::vector<RepositoryConfig> load_repositories(const std::string& path);
 
 bool sync_repo(const RepositoryConfig& repo);
 
-Repository load_repo(const RepositoryConfig& repo);
-
+bool download_package(const Repository& repo, const Package& pkg, const std::string& output);
 Package* find_package(Repository& repo, const std::string& name);
 
+std::vector<RepositoryConfig> load_repos(const std::string& path);
+Repository load_repo(const RepositoryConfig& repo);
 PackageMeta load_package_meta(const Repository& repo, const Package& pkg);
