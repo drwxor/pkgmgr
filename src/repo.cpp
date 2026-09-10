@@ -144,6 +144,8 @@ PackageMeta load_package_meta( const Repository& repo, const Package& pkg) {
 			meta.version = fields[1];
 		else if (fields[0] == "depends" && !fields[1].empty())
 		    meta.depends = split(fields[1], ';');
+		else if (fields[0] == "content")
+			meta.content = fields[1];
 	}
 
 	return meta;

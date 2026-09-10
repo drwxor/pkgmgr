@@ -11,5 +11,6 @@ struct Package {
 struct PackageMeta {
 	std::string description;
 	std::string version;
+	std::string content;
 	std::vector<std::string> depends;
 };

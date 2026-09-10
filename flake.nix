@@ -17,14 +17,16 @@
       packages = with pkgs; [
         clang
         llvm
-	lld
+        lld
         curl
         pkg-config
-        zsh
+        oksh
       ];
 
       shellHook = ''
-       	export PROMPT="develop %~ > " 
+       	export PS1="develop\$ "
+        alias pkgmgr="./pkgmgr"
+
         echo "pkgmgr dev shell"
         echo "clang: $(clang --version | head -n1)"
       '';
