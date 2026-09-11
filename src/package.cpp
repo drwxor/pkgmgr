@@ -6,6 +6,7 @@
 #include <sstream>
 #include <vector>
 
+#include "extract.hpp"
 #include "models.hpp"
 #include "repo.hpp"
 #include "csv.hpp"
@@ -85,8 +86,10 @@ std::vector<Package> get_installed() {
 bool remove_package(const std::string& name) {
 	std::ifstream input(INSTALLED_PATH);
 
-	if (!input.is_open())
+	if (!input.is_open()) {
+        printf("unable to open %s\n", INSTALLED_PATH.c_str());
 		return false;
+    }
 
 	std::vector<std::string> entries;
 	std::string line;
@@ -107,19 +110,118 @@ bool remove_package(const std::string& name) {
 			continue;
 		}
 
-		if (std::remove(fields[2].c_str()) != 0)
+		if (std::remove(fields[2].c_str()) != 0) {
+		    printf("unable to remove %s\n", fields[2].c_str());
 			return false;
+	    }
 	}
 
 	input.close();
 
 	std::ofstream output(INSTALLED_PATH);
 
-	if (!output.is_open())
+	if (!output.is_open()) {
+	    printf("unable to open %s\n", INSTALLED_PATH.c_str());
 		return false;
+	}
 
 	for (auto& entry : entries)
 		output << entry << '\n';
+
+	return true;
+}
+
+bool install_package_from_repo(Repository* repo, const Package* pkg) {
+    std::string output = pkg->name + ".tar.zst";
+
+	if (!download_package(*repo, *pkg, output)) {
+		printf("download failed\n");
+		return false;
+	}
+
+	std::ifstream installed(INSTALLED_PATH);
+
+	if (!installed.good()) {
+		std::ofstream file(INSTALLED_PATH);
+
+		if (!file.is_open()) {
+			printf("failed to create installed database\n");
+			return false;
+		}
+
+		file << "name,version,path\n";
+	}
+
+	std::vector<std::string> files;
+
+	if (!extract_package(output, PACKAGE_EXTRACT_DIRECTORY, files)) {
+		printf("extraction failed\n");
+		std::remove(output.c_str());
+		return false;
+	}
+
+	std::ofstream file(INSTALLED_PATH, std::ios::app);
+
+	if (!file.is_open()) {
+		printf("failed to open installed database\n");
+		return false;
+	}
+
+	for (auto& path : files) {
+		file << pkg->name << "," << pkg->metadata.version << "," << path << "\n";
+	}
+
+	std::remove(output.c_str());
+
+	printf("installed %s\n", pkg->name.c_str());
+
+	return true;
+}
+
+bool install_package(const char *name, std::vector<RepositoryConfig>& repos) {
+    if (is_installed(name)) {
+		printf("%s is already installed\n", name);
+		return false;
+	}
+
+	bool found = false;
+
+	for (auto& config : repos) {
+		auto repo = load_repo(config);
+		Package* pkg = find_package(repo, name);
+
+		if (!pkg)
+			continue;
+
+		found = true;
+
+		bool dependency_failed = false;
+
+		for (auto& dep : pkg->metadata.depends) {
+			printf("installing dependency %s\n", dep.c_str());
+
+			if (!install_package(dep.c_str(), repos)) {
+				printf("failed to install %s\n", dep.c_str());
+				dependency_failed = true;
+				break;
+			}
+		}
+
+		if (dependency_failed)
+			return false;
+
+		if (!install_package_from_repo(&repo, pkg)) {
+		    printf("failed to install %s", name);
+		    return false;
+		}
+
+		break;
+	}
+
+	if (!found) {
+	    printf("%s: package not found\n", name);
+		return false;
+	}
 
 	return true;
 }

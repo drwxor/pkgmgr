@@ -16,6 +16,7 @@ enum Command {
 	COMMAND_SYNC,
 	COMMAND_INSTALL,
 	COMMAND_REMOVE,
+	COMMAND_PURGE,
 	COMMAND_INFO,
 	COMMAND_LIST,
 	COMMAND_UNKNOWN,
@@ -36,6 +37,9 @@ Command parse_command(int argc, char** argv) {
 	if (cmd == "del")
 		return COMMAND_REMOVE;
 
+	if (cmd == "purge")
+		return COMMAND_PURGE;
+
 	if (cmd == "info")
 		return COMMAND_INFO;
 
@@ -50,6 +54,7 @@ void print_help() {
 	printf("\tsync\n");
 	printf("\tadd <packages>\n");
 	printf("\tdel <packages>\n");
+	printf("\tpurge <packages>\n");
 	printf("\tinfo <package>\n");
 	printf("\tlist\n");
 }
@@ -113,72 +118,8 @@ int main(int argc, char** argv) {
 			auto repos = load_repos(REPOS_PATH);
 
 			for (int i = 2; i < argc; i++) {
-                const char* name = argv[i];
-
-				if (is_installed(name)) {
-					printf("%s is already installed\n", name);
-					continue;
-				}
-
-				bool found = false;
-
-				for (auto& config : repos) {
-					auto repo = load_repo(config);
-					auto pkg = find_package(repo, name);
-
-					if (!pkg)
-						continue;
-
-					found = true;
-
-					std::string output = pkg->name + ".tar.zst";
-
-					if (!download_package(repo, *pkg, output)) {
-						printf("download failed\n");
-						return 1;
-					}
-
-					std::ifstream installed(INSTALLED_PATH);
-
-					if (!installed.good()) {
-						std::ofstream file(INSTALLED_PATH);
-
-						if (!file.is_open()) {
-							printf("failed to create installed database\n");
-							return 1;
-						}
-
-						file << "name,version,path\n";
-					}
-
-					std::vector<std::string> files;
-
-					if (!extract_package(output, PACKAGE_EXTRACT_DIRECTORY, files)) {
-						printf("extraction failed\n");
-						std::remove(output.c_str());
-						return 1;
-					}
-
-					std::ofstream file(INSTALLED_PATH, std::ios::app);
-
-					if (!file.is_open()) {
-						printf("failed to open installed database\n");
-						return 1;
-					}
-
-					for (auto& path : files) {
-						file << pkg->name << "," << pkg->metadata.version << "," << path << "\n";
-					}
-
-					std::remove(output.c_str());
-
-					printf("installed %s\n", pkg->name.c_str());
-
-					break;
-				}
-
-				if (!found)
-					printf("%s: package not found\n", name);
+			    const char *name = argv[i];
+                install_package(name, repos);
 			}
 
 			curl_global_cleanup();
@@ -200,11 +141,63 @@ int main(int argc, char** argv) {
 				}
 
                 if (!remove_package(name)) {
-    				printf("failed to remove package\n");
+    				printf("failed to remove %s\n", name);
     				continue;
     			}
 
     			printf("removed %s\n", name);
+			}
+
+			break;
+		}
+
+		case COMMAND_PURGE: {
+			if (argc < 3) {
+				printf("missing package name\n");
+				return 1;
+			}
+
+			auto repos = load_repos(REPOS_PATH);
+
+			for (int i = 2; i < argc; i++) {
+                const char* pkg_name = argv[i];
+
+                for (auto& config : repos) {
+    				auto repo = load_repo(config);
+
+    				auto pkg = find_package(repo, argv[2]);
+
+    				if (!pkg)
+    					continue;
+
+                    for (auto& name : pkg->metadata.depends) {
+                        printf("removing dependency %s\n", name.c_str());
+
+                        if (!is_installed(name)) {
+                            printf("%s is not installed\n", name.c_str());
+                            continue;
+                        }
+
+                        if (!remove_package(name)) {
+                            printf("failed to remove %s\n", name.c_str());
+                            continue;
+                        }
+
+                        printf("removed dependency %s\n", name.c_str());
+                    }
+                }
+
+                if (!is_installed(pkg_name)) {
+                    printf("%s is not installed\n", pkg_name);
+                    continue;
+                }
+
+                if (!remove_package(pkg_name)) {
+                    printf("failed to remove %s\n", pkg_name);
+                    continue;
+                }
+
+                printf("removed %s\n", pkg_name);
 			}
 
 			break;
