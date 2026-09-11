@@ -4,7 +4,9 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <vector>
 
+#include "models.hpp"
 #include "repo.hpp"
 #include "csv.hpp"
 #include "download.hpp"
@@ -35,6 +37,49 @@ Package* find_package(Repository& repo, const std::string& name) {
 		return nullptr;
 
 	return &it->second;
+}
+
+bool is_installed(const std::string& name) {
+	std::ifstream file(INSTALLED_PATH);
+	std::string line;
+
+	if (!std::getline(file, line))
+		return false;
+
+	while (std::getline(file, line)) {
+		auto fields = split(line, ',');
+
+		if (fields.size() >= 1 && fields[0] == name)
+			return true;
+	}
+
+	return false;
+}
+
+std::vector<Package> get_installed() {
+	std::vector<Package> packages;
+	std::ifstream file(INSTALLED_PATH);
+	std::string line;
+
+	if (!file.is_open())
+		return packages;
+
+	std::getline(file, line);
+
+	while (std::getline(file, line)) {
+		auto fields = split(line, ',');
+
+		if (fields.size() < 3)
+			continue;
+
+		Package pkg;
+		pkg.name = fields[0];
+		pkg.metadata.version = fields[1];
+
+		packages.push_back(pkg);
+	}
+
+	return packages;
 }
 
 bool remove_package(const std::string& name) {
